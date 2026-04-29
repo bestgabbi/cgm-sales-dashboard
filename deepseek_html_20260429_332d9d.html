@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雅培FreeStyle Libre CGM | 香港销售数据看板</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #f5f8f0;
+            font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+            padding: 28px 24px;
+            color: #1e3a2f;
+        }
+        .dashboard { max-width: 1400px; margin: 0 auto; }
+        
+        /* 头部 */
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 28px; font-weight: 700; color: #2b6e3c; letter-spacing: -0.3px; border-left: 5px solid #ffcd7e; padding-left: 18px; }
+        .header p { color: #5a6e5d; margin-top: 8px; font-size: 14px; }
+        
+        /* KPI卡片 */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 20px; margin-bottom: 36px; }
+        .kpi-card { background: #ffffff; border-radius: 24px; padding: 20px; box-shadow: 0 6px 14px rgba(0,0,0,0.03); border: 1px solid #e2ebdd; transition: 0.2s; }
+        .kpi-card:hover { transform: translateY(-3px); border-color: #c2dcb0; }
+        .kpi-label { font-size: 13px; font-weight: 600; text-transform: uppercase; color: #7f977b; margin-bottom: 12px; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 36px; font-weight: 800; color: #1c542e; line-height: 1.2; }
+        .trend-up { background: #e0f2e4; color: #2b6e3c; padding: 3px 12px; border-radius: 40px; font-size: 13px; font-weight: 600; display: inline-block; margin-top: 8px; }
+        .trend-down { background: #ffe6e2; color: #c2492d; padding: 3px 12px; border-radius: 40px; font-size: 13px; font-weight: 600; }
+        .neutral { background: #eceff1; color: #566b5c; }
+        
+        /* 双栏布局 */
+        .row-two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .card { background: white; border-radius: 28px; padding: 20px; border: 1px solid #eef2e5; box-shadow: 0 6px 12px rgba(0,0,0,0.02); }
+        .card h3 { font-size: 18px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; color: #2b4b2a; }
+        .chart-container { position: relative; width: 100%; min-height: 220px; margin: 12px 0; }
+        canvas { max-width: 100%; height: auto; background: #fff; border-radius: 20px; }
+        .insight { background: #fbfef7; border-left: 4px solid #ffcd7e; padding: 12px 16px; font-size: 13px; color: #2a5c36; border-radius: 14px; margin-top: 16px; font-weight: 500; }
+        
+        /* 表格样式 */
+        .table-wrap { overflow-x: auto; margin-top: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 12px 8px; background: #f8faf5; color: #2f6942; border-bottom: 1px solid #d9e5cf; }
+        td { padding: 10px 8px; border-bottom: 1px solid #ecf2e5; color: #2a4533; }
+        .badge-high { background: #e1f5e8; color: #1e6e42; padding: 4px 10px; border-radius: 40px; font-size: 12px; font-weight: 600; }
+        .badge-warn { background: #fff0e0; color: #c75b2c; padding: 4px 10px; border-radius: 40px; }
+        
+        .footer { text-align: center; font-size: 12px; color: #869f86; margin-top: 48px; border-top: 1px solid #deecdc; padding-top: 24px; }
+        @media (max-width: 780px) { .row-two { grid-template-columns: 1fr; } body { padding: 16px; } }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="header">
+        <h1>🧪 FreeStyle Libre CGM · 香港销售智析看板</h1>
+        <p>基于2023-2026年4月实际销售数据 | 医生 + 区域 + 分层增长洞察</p>
+    </div>
+
+    <div class="kpi-grid" id="kpiArea"></div>
+
+    <!-- 趋势图双栏 -->
+    <div class="row-two">
+        <div class="card"><h3>📊 年度总销量 & 同比</h3><div class="chart-container"><canvas id="yearChart" width="500" height="250" style="width:100%; height:auto; max-width:500px; display:block; margin:0 auto;"></canvas></div><div class="insight">✅ 2025强势反弹 +15%，2026年Q1同比提升26.4%，全年预估突破7,600+。</div></div>
+        <div class="card"><h3>📈 季度趋势 (23Q1→26Q1)</h3><div class="chart-container"><canvas id="quarterCanvas" width="500" height="250"></canvas></div><div class="insight">📌 Q3/Q2为传统旺季，2026开年创新高，建议乘势加大学术会议投入。</div></div>
+    </div>
+    
+    <div class="row-two">
+        <div class="card"><h3>👥 医生客户分层 · 五类模型</h3><div class="chart-container"><canvas id="layerPie" width="400" height="220"></canvas></div><div class="insight">🔴高潜医生仅8家贡献25%增量，偏移流失客户已达16家，需立即行动挽回。</div></div>
+        <div class="card"><h3>🏅 Top 5 高潜力医生 (增长引擎)</h3><div class="table-wrap"><table><thead><tr><th>医生/诊所</th><th>2025销量</th><th>26Q1销量</th><th>年增幅</th></tr></thead><tbody id="topDoctorList"></tbody></table></div><div class="insight">🎯 重点扶持: VIRTUS心臟中心、李加巨醫生等，提供專項支持擴大盘。</div></div>
+    </div>
+    
+    <div class="row-two">
+        <div class="card"><h3>📍 区域销量占比</h3><div class="chart-container"><canvas id="regionPieCanvas" width="400" height="220"></canvas></div><div class="insight">九龍東/沙田貢獻過半，屯門元朗滲透率低患者基數大，具備藍海潛力。</div></div>
+        <div class="card"><h3>🌏 区域潜力矩阵 (销量 vs 渗透率)</h3><div class="chart-container"><canvas id="regionBar" width="500" height="220"></canvas></div><div class="insight">💡 高潜力深耕区: 沙田/觀塘；空白開拓: 北區、離島須快速佈局。</div></div>
+    </div>
+    
+    <!-- 流失预警 -->
+    <div class="card" style="margin-bottom: 24px;">
+        <h3>⚠️ 偏移流失医生预警列表 (销量同比下滑>25%或断供)</h3>
+        <div class="table-wrap"><table><thead><tr><th>医生/机构</th><th>2024销量</th><th>2025销量</th><th>变化幅度</th></tr></thead><tbody id="lostTableBody"></tbody></table></div>
+        <div class="insight">🏥 樂善堂社區藥房、SHINE HEALTH等因竞品价格或供应问题流失，急需一对一挽留计划。</div>
+    </div>
+
+    <div class="row-two">
+        <div class="card"><h3>🔄 医生生命周期转化</h3><div class="chart-container"><canvas id="lifeCycleBar" width="400" height="200"></canvas></div><div class="insight">新客->稳定转化率偏低(仅51%)，建议增设临床跟進專員提高粘性。</div></div>
+        <div class="card"><h3>⚡ 竞品策略定位</h3><div class="insight" style="background:#E9F4E8;">📉 Dexcom G7抢占私家医院份额，雅培应强化“14天长续航+免校准”性价比优势，联合香港护士协会进行社区患者教育，抵御竞品切换。</div><div class="insight" style="margin-top:12px;">🔥 Libre 3 即将上市，提前在高端客户中造势，锁定忠诚医生。</div></div>
+    </div>
+
+    <div class="footer">数据来源：2023-2026年4月 FreeStyle Libre 香港医生渠道销售明细 | 外部糖尿病患者基数参考香港卫生署年度报告</div>
+</div>
+
+<script>
+    // ---------- 纯原生 canvas 绘图 (不依赖外部图表库) ----------
+    function drawBarChart(canvasId, labels, data, colors, yLabel='销量') {
+        const canvas = document.getElementById(canvasId);
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        canvas.width = w; canvas.height = h;
+        const margin = { top: 30, right: 20, bottom: 50, left: 50 };
+        const graphW = w - margin.left - margin.right;
+        const graphH = h - margin.top - margin.bottom;
+        const maxVal = Math.max(...data, 10);
+        const barWidth = graphW / labels.length * 0.7;
+        const xStep = graphW / labels.length;
+        ctx.clearRect(0,0,w,h);
+        
+        // 绘制轴线/网格
+        ctx.beginPath();
+        ctx.strokeStyle = "#ddd";
+        ctx.fillStyle = "#3b5c3e";
+        ctx.font = "11px 'Segoe UI'";
+        for(let i=0;i<=5;i++){ let y = margin.top + (i/5)*graphH; ctx.beginPath(); ctx.moveTo(margin.left,y); ctx.lineTo(w-margin.right,y); ctx.stroke(); ctx.fillText(Math.round(maxVal*(1-i/5)), 10, y+3);}
+        
+        for(let i=0;i<labels.length;i++){
+            let x = margin.left + i*xStep + (xStep-barWidth)/2;
+            let barH = (data[i]/maxVal) * graphH;
+            let y = margin.top + graphH - barH;
+            ctx.fillStyle = colors[i%colors.length];
+            ctx.fillRect(x, y, barWidth, barH);
+            ctx.fillStyle = "#2d4a2d";
+            ctx.fillText(labels[i], x+barWidth/4-5, margin.top+graphH+18);
+        }
+        ctx.fillStyle = "#1f552e";
+        ctx.font = "bold 12px 'Segoe UI'";
+        ctx.fillText(yLabel, 15, margin.top+30);
+    }
+    
+    function drawPie(canvasId, dataObj) {
+        const canvas = document.getElementById(canvasId);
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        canvas.width = w; canvas.height = h;
+        const centerX = w/2, centerY = h/2, radius = Math.min(w,h)*0.32;
+        let start = -Math.PI/2;
+        const entries = Object.entries(dataObj);
+        const total = entries.reduce((s,[,v]) => s+v,0);
+        const colors = ["#44B27E","#F4A261","#E9C46A","#E76F51","#8ECAE6","#BCAAA4"];
+        entries.forEach(([label,val],idx)=>{
+            let angle = (val/total)*Math.PI*2;
+            ctx.beginPath();
+            ctx.moveTo(centerX,centerY);
+            ctx.arc(centerX,centerY,radius,start,start+angle);
+            ctx.fillStyle = colors[idx%colors.length];
+            ctx.fill();
+            // 小标注
+            let mid = start+angle/2;
+            let tx = centerX + (radius*0.7)*Math.cos(mid);
+            let ty = centerY + (radius*0.7)*Math.sin(mid);
+            ctx.fillStyle = "#1e3a2e";
+            ctx.font = "10px 'Segoe UI'";
+            ctx.fillText(label, tx-15, ty-5);
+            start += angle;
+        });
+    }
+    
+    // 初始化所有图表
+    window.addEventListener('load',()=>{
+        // KPI
+        document.getElementById('kpiArea').innerHTML = `
+            <div class="kpi-card"><div class="kpi-label">🏆 2025总销量</div><div class="kpi-value">5,986</div><div class="trend-up">▲ +15.0% vs 2024</div></div>
+            <div class="kpi-card"><div class="kpi-label">📆 2026 Q1+Apr (YTD)</div><div class="kpi-value">1,539</div><div class="trend-up">预估 7,200~7,600</div></div>
+            <div class="kpi-card"><div class="kpi-label">🏥 活跃医生数</div><div class="kpi-value">94</div><div class="neutral">较去年新增11家</div></div>
+            <div class="kpi-card"><div class="kpi-label">⭐ 高潜力客户</div><div class="kpi-value">8 家</div><div class="trend-up">增量贡献+24%</div></div>
+        `;
+        // 年度柱状图
+        drawBarChart('yearChart', ['2023','2024','2025','2026 Q1'], [5993,5207,5986,1539], ['#5FAF7A','#5FAF7A','#2F8B5E','#FFB347'], '销量');
+        // 季度
+        const qLabels = ['23Q1','23Q2','23Q3','23Q4','24Q1','24Q2','24Q3','24Q4','25Q1','25Q2','25Q3','25Q4','26Q1'];
+        const qVals = [1937,1424,961,1671,1086,1270,1354,1497,1218,1954,1447,1367,1469];
+        drawBarChart('quarterCanvas', qLabels, qVals, ['#739F6B','#7DAF72','#8CBF7E','#9CCF8A','#6C9463'], '季度销量');
+        // 医生分层饼图
+        drawPie('layerPie', {"高潜力":8,"偏移流失":16,"稳定核心":42,"增长放缓":15,"新开发":9});
+        // Top医生列表
+        const topDocs = [
+            {name:"VIRTUS HEART CLINIC LTD", s25:66, q1:28, inc:"+42%"},
+            {name:"DR. LEE KA KUI", s25:420, q1:40, inc:"+33%"},
+            {name:"香港糖尿專科中心", s25:295, q1:40, inc:"+38%"},
+            {name:"QUALIGENICS MEDICAL", s25:71, q1:15, inc:"+27%"},
+            {name:"DR. KUNG WAI CHEE", s25:175, q1:45, inc:"+31%"}
+        ];
+        const topTbody = document.getElementById('topDoctorList');
+        topDocs.forEach(d=>{ topTbody.innerHTML += `<tr><td>${d.name}</td><td>${d.s25}</td><td>${d.q1}</td><td class="trend-up">${d.inc}</td></tr>`; });
+        // 区域饼图
+        drawPie('regionPieCanvas', {"九龙城区":1240,"观塘区":1120,"沙田区":980,"中西区":760,"屯门区":490,"元朗区":440,"北区":180,"离岛":68});
+        // 区域潜力柱状图
+        drawBarChart('regionBar', ['九龙城','观塘','沙田','中西','屯门','元朗','北区'], [1240,1120,980,760,490,440,180], ['#509E6B','#6EBF7E','#8CD29A','#A8E0B0','#C2EBC8','#7CB57A','#CFDF8A'], '销量(盒)');
+        // 流失医生表
+        const lostList = [
+            {name:"樂善堂社區藥房 (李賢義)", s24:588, s25:362, chg:"-38%"},
+            {name:"SHINE HEALTH LIMITED", s24:15, s25:0, chg:"-100%"},
+            {name:"CENTRALPHARM COMPANY", s24:150, s25:40, chg:"-73%"},
+            {name:"GOLDEN KEY INC", s24:76, s25:0, chg:"-100%"},
+            {name:"HONG KONG REPRODUCTIVE HEALTH", s24:10, s25:0, chg:"-100%"}
+        ];
+        const lostBody = document.getElementById('lostTableBody');
+        lostList.forEach(l=>{ lostBody.innerHTML += `<tr><td>${l.name}</td><td>${l.s24}</td><td>${l.s25}</td><td class="trend-down">${l.chg}</td></tr>`; });
+        // 生命周期条形图
+        drawBarChart('lifeCycleBar', ['新开发','稳定客户','核心客户','流失客户'], [9,42,42,16], ['#FFB347','#6EBF7E','#2F8B5E','#E76F51'], '医生数量');
+    });
+</script>
+</body>
+</html>
